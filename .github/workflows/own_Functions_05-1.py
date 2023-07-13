@@ -358,7 +358,7 @@ def analysis_trajectory(time, xgauss, ygauss,
 
     for a in range(dinfo.index[0], dinfo.index[-1]):#the epochs are written as "not a quarter" by default. We just need to change it for those which are
         aprime = a - dinfo.index[0]
-        not_past_nor_found = True; i = 0; turn_time = dinfo.iat[aprime , 0]
+        not_past_nor_found = True; i = 0; turn_time = dinfo.loc[dinfo.index[aprime], "time"]    #dinfo.iat[aprime , 0]
         if time[list_epochs[-1][1]] < turn_time : #if the last epoch end before the recorded turn, discard the turn
             not_past_nor_found = False
         
@@ -370,9 +370,9 @@ def analysis_trajectory(time, xgauss, ygauss,
                     #check if the beginning of the epoch (movement) is in the polygon it's supposed to                                                                             #check if the beginning of the epoch (movement) is in the polygon it's supposed to 
 
                 #set the value of  epoch[3] for this epoch to the number of reward the aniimal had at the beginning off the movement
-                list_epochs[i][3] = dinfo.iat[aprime -1, 14]
+                list_epochs[i][3] =  dinfo.loc[dinfo.index[aprime - 1], "totalnberOfRewards"] #dinfo.iat[aprime -1, 14]
 
-                if points_in_polygon(polygon= collection_trapeze[dinfo.iat[aprime,4]][dinfo.iat[aprime, 5]], pts = [[xgauss[list_epochs[i][0]], ygauss[list_epochs[i][0]]]]) and points_in_polygon(polygon = collection_trapeze[dinfo.iat[aprime,4]][dinfo.iat[aprime,6]], pts= [[xgauss[list_epochs[i][1]], ygauss[list_epochs[i][1]]]]) :
+                if points_in_polygon(polygon= collection_trapeze[dinfo.loc[dinfo.index[aprime], "currentPatch"]][dinfo.loc[dinfo.index[aprime], "previousTrapeze"]], pts = [[xgauss[list_epochs[i][0]], ygauss[list_epochs[i][0]]]]) and points_in_polygon(polygon = collection_trapeze[dinfo.loc[dinfo.index[aprime], "currentPatch"]][dinfo.loc[dinfo.index[aprime], "currentTrapeze"]], pts= [[xgauss[list_epochs[i][1]], ygauss[list_epochs[i][1]]]]) :
                     #current patch is obtained from a number between 0 and 3 indicating in which patch it is (True = 1, False = 0)
                     current_patch = whichPatch((xgauss[list_epochs[i][0]] < Resolution[0] / 2) * 1 + (ygauss[list_epochs[i][0]] < Resolution[1] / 2) * 2)
 
@@ -382,17 +382,18 @@ def analysis_trajectory(time, xgauss, ygauss,
                         else : w_turn = "w"
 
                         #select the type of turn 
-                        if len(dinfo.iat[aprime, 13]) == 6 : t_turn = 'E' #E stand for Extra turn
-                        elif dinfo.iat[aprime, 13][0] == 'b' : 
-                            if dinfo.iat[aprime, 13][2] == 'b' :t_turn = 'H' #H for horrible (neither good direction nor good good object)
+                        if len(dinfo.loc[dinfo.index[aprime], "typeOfTurn"]) == 6 : t_turn = 'E' #E stand for Extra turn
+                        elif dinfo.loc[dinfo.index[aprime], "typeOfTurn"][0] == 'b' : 
+                            if dinfo.loc[dinfo.index[aprime], "typeOfTurn"][2] == 'b' :t_turn = 'H' #H for horrible (neither good direction nor good good object)
                             else : t_turn = 'O' # O stand for wrong Object
-                        elif dinfo.iat[aprime, 13][2] == 'b' : t_turn = 'B'# B stand for Bad turn
+                        elif dinfo.loc[dinfo.index[aprime], "typeOfTurn"][2] == 'b' : t_turn = 'B'# B stand for Bad turn
+                        elif dinfo.loc[dinfo.index[aprime], "typeOfTurn"][0] == 'e' : t_turn = 'X' # X for exploration
                         else : t_turn = 'G' # G stands for Good turn
 
                         list_epochs[i][2] = "Q" + w_turn + t_turn + current_patch# Q for quarter turn. 
-                    else : in_an_epoch_but_no_quarter += [(turn_time, i, dinfo.iat[aprime, 10])]
+                    else : in_an_epoch_but_no_quarter += [(turn_time, i, dinfo.loc[dinfo.index[aprime], "Rewarded"])]
                 else : 
-                    in_an_epoch_but_no_quarter += [(turn_time, i, dinfo.iat[aprime, 10])]
+                    in_an_epoch_but_no_quarter += [(turn_time, i, dinfo.loc[dinfo.index[aprime], "Rewarded"])]
 
                 not_past_nor_found = False # the correct epoch was found, no need to continue
 
